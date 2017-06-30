@@ -50,11 +50,12 @@ def get_next_item(page):
 def get_first_n_results(keyword, n):
     url = GOOGLE_IMG_URL.format(query=keyword)
     print "Downloading from " + url
-    page = requests.get(url)
+    page = requests.get(url, headers={'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36"})
     page = page.text
     results = []
 
     link, index = get_next_item(page)
+    print link
 
     while link is not None and len(results) <= n:
         results.append(link)
@@ -74,8 +75,10 @@ for i in xrange(len(landmarks)):
     query = landmarks[i].replace(' ', '%20')
     
     links = get_first_n_results(query, IMG_PER_LANDMARK)
+    print links
 
     for j in xrange(len(links)):
+        time.sleep(0.01)
         r = requests.get(links[j])
         img = Image.open(StringIO(r.content))
-        img.save('dataset/%d/%d.jpg', 'JPEG')
+        img.save('dataset/%d/%d.png' % (i, j), 'PNG')
