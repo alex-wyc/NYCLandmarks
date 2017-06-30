@@ -49,11 +49,9 @@ def get_next_item(page):
 
 def get_first_n_results(keyword, n):
     url = GOOGLE_IMG_URL.format(query=keyword)
-    print url
+    print "Downloading from " + url
     page = requests.get(url)
-    print page
     page = page.text
-    print page
     results = []
 
     link, index = get_next_item(page)
@@ -62,7 +60,6 @@ def get_first_n_results(keyword, n):
         results.append(link)
         page = page[index:]
         link, index = get_next_item(page)
-        print results
 
     return results
 
