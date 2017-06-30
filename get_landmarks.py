@@ -66,6 +66,9 @@ def get_first_n_results(keyword, n):
 
 os.system('mkdir dataset')
 
+failures = 0
+successes = 0
+
 for i in xrange(len(landmarks)):
 
     print "Processing %dth Landmark: %s" % (i, landmarks[i])
@@ -79,6 +82,14 @@ for i in xrange(len(landmarks)):
 
     for j in xrange(len(links)):
         time.sleep(0.01)
-        r = requests.get(links[j])
-        img = Image.open(StringIO(r.content))
-        img.save('dataset/%d/%d.png' % (i, j), 'PNG')
+        try:
+            r = requests.get(links[j])
+            img = Image.open(StringIO(r.content))
+            img.save('dataset/%d/%d.png' % (i, j), 'PNG')
+            successes += 1
+        except KeyboardInterrupt:
+            exit(1)
+        except:
+            failures += 1
+
+print "Done! Downloaded %d images, %d failures" % (successes, failures)
