@@ -1,5 +1,4 @@
 Empire State Building
-Brooklyn Bridge
 Central Park
 Statue of Liberty
 One World Trade Center
@@ -22,13 +21,13 @@ Flatiron Building
 Brooklyn Bridge
 Manhattan Bridge
 Roosevelt Island
-USS Intrepid
+Intrepid Air and Sea Museum
 Lincoln Center
 MoMA
 St. Patrick's Cathedral
 New York Public Library
 Washington Square Park
-City Hall
+NYC City Hall
 Bloomberg Tower
 Harlem Courthouse
 Woolworth Building
@@ -61,5 +60,3 @@ Theodore Roosevelt Birthplace
 Hamilton Grange
 Castle Clinton
 Grant's Tomb
-
-
