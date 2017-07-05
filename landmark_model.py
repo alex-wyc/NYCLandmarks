@@ -1,4 +1,7 @@
 import tensorflow as tf
+from PIL import Image
+import PIL
+import os
 
 # utils
 def weight_var(shape):
@@ -15,17 +18,32 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
 
+def read_image(path):
+    img = Image.open(path)
+    w,h = img.size
+    pixels = img.load()
+    output = [0 for _ in xrange(w * h)]
+    for x in xrange(w):
+        for y in xrange(h):
+            output[y * w + x] = pixels[x, y]
+    return output
+
+read_image("./dataset_processed/0/0.png")
+
 # setup
 
-x = tf.placeholder(tf.float32, [None, 784])
+x = tf.placeholder(tf.float32, [None, 360000])
 y = tf.placeholder(tf.float32, [None, 2])
 
 W_conv1 = weight_var([5, 5, 1, 32])
 b_conv1 = bias_var([32])
 
-x_image = tf.reshape(x, [-1, 28, 28, 1])
+x_image = tf.reshape(x, [-1, 600, 600, 1])
 
-W = tf.Variable(tf.zeros([784, 10]))
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+h_pool1 = max_pool_2x2(h_conv1)
+
+W = tf.Variable(tf.zeros([360000, 10]))
 b = tf.Variable(tf.zeros([10]))
 
 W_conv2 = weight_var([5, 5, 32, 64])
@@ -56,17 +74,22 @@ init = tf.initialize_all_variables()
 sess = tf.Session()
 sess.run(init)
 
-for i in xrange(total):
-    batch = mnist.train.next_batch(per_batch)
+photos_dir = "./dataset_processed/"
 
-    if i % print_interval == 0:
-        train_accuracy = sess.run(accuracy, feed_dict = {
-            x: batch[0],
-            y: batch[1]
-            })
-        print("step %d, accuracy: %g" % (i, train_accuracy))
+for subdir in os.listdir(photos_dir):
+    for file in os.listdir(photos_dir + subdir):
 
-    sess.run(train_step, feed_dict = {x: batch[0], y: batch[1]})
-
-print("test accuracy %g"%sess.run(accuracy, feed_dict={
-    x: mnist.test.images, y: mnist.test.labels}))
+#for i in xrange(total):
+#    batch = mnist.train.next_batch(per_batch)
+#
+#    if i % print_interval == 0:
+#        train_accuracy = sess.run(accuracy, feed_dict = {
+#            x: batch[0],
+#            y: batch[1]
+#            })
+#        print("step %d, accuracy: %g" % (i, train_accuracy))
+#
+#    sess.run(train_step, feed_dict = {x: batch[0], y: batch[1]})
+#
+#print("test accuracy %g"%sess.run(accuracy, feed_dict={
+#    x: mnist.test.images, y: mnist.test.labels}))
