@@ -48,7 +48,7 @@ for subdir in xrange(len(f)):
     for file in os.listdir(file_location):
         try:
             img = Image.open(file_location + file)
-            img = img.convert('1')
+            img = img.convert('L')
             img = img.resize((width, height), PIL.Image.ANTIALIAS)
             img.save(output_location + file)
             successes += 1
