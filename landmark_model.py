@@ -2,6 +2,10 @@ import tensorflow as tf
 from PIL import Image
 import PIL
 import os
+from tensorflow.contrib import learn
+from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
+import numpy as np
+
 
 # utils
 def weight_var(shape):
@@ -26,9 +30,68 @@ def read_image(path):
     for x in xrange(w):
         for y in xrange(h):
             output[y * w + x] = pixels[x, y]
-    return output
+    return np.asarray(output, dtype=np.int32)
 
-read_image("./dataset_processed/0/0.png")
+def get_train_data(building):
+    """
+    return a tensor of the first """
+
+def get_eval_data(building):
+    pass
+
+def cnn_model_fn(features, labels, mode):
+    input_layer = tf.reshape(features, [-1, 600, 600, 1])
+
+    conv1 = tf.layers.conv2d(
+            inputs=input_layer,
+            filters=100,
+            kernel_size=[10,10],
+            padding="same",
+            activation=tf.nn.relu)
+
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[4, 4], strides=4)
+
+    conv2 = tf.layers.conv2d(
+            inputs=pool1,
+            filters=64,
+            kernel_size=[5,5],
+            padding="same",
+            activation=tf.nn.relu)
+
+    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
+
+    pool2_flat = tf.reshape(pool2, [-1, 600 * 600 * 64])
+    dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+    dropout = tf.layers.dropout(
+            inputs=dense,
+            rate=0.4,
+            training=mode == learn.ModeKeys.TRAIN)
+
+    logits = tf.layers.dense(inputs=dropout, units=2)
+
+    loss = None
+    train_op = None
+
+    if mode != learn.ModeKeys.INFER:
+        onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=2)
+        loss = tf.losses.softmax_cross_entropy(
+                onehot_labels=onehot_labels, logits=logits)
+
+    if mode == learn.ModeKeys.TRAIN:
+        train_op = tf.contrib.layers.optimize_loss(
+                loss=loss,
+                global_step=tf.contrib.framework.get_global_step(),
+                learning_rate=0.001,
+                optimizer="SGD")
+
+    predictions = {
+        "classes": tf.argmax(input=logits, axis=1),
+        "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+    }
+
+    return model_fn_lib.ModelFnOps(
+            mode=mode, predictions=predictions, loss=loss, train_op=train_op)
+
 
 # setup
 
