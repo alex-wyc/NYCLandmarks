@@ -34,10 +34,19 @@ def read_image(path):
 
 def get_train_data(building):
     """
-    return a tensor of the first """
+    return a tensor of the first 25 images in the numbered directory
+    """
+    img_subdir = "./dataset_processed/" + str(building) + "/"
+    data = [read_image(img_subdir + str(x) + ".png") for x in xrange(26)]
+    return np.asarray(data)
 
-def get_eval_data(building):
-    pass
+def get_test_data(building):
+    """
+    return the last 5 imgs in the numbered directory
+    """
+    img_subdir = "./dataset_processed/" + str(building) + "/"
+    data = [read_image(img_subdir + str(x) + ".png") for x in xrange(26, 31)]
+    return np.asarray(data)
 
 def cnn_model_fn(features, labels, mode):
     input_layer = tf.reshape(features, [-1, 600, 600, 1])
