@@ -1,4 +1,5 @@
 import tensorflow as tf
+import random
 from PIL import Image
 import PIL
 import os
@@ -34,19 +35,37 @@ def read_image(path):
 
 def get_train_data(building):
     """
-    return a tensor of the first 25 images in the numbered directory
+    return a tensor of 25 imgs of the building and 30 of not the building
     """
     img_subdir = "./dataset_processed/" + str(building) + "/"
-    data = [read_image(img_subdir + str(x) + ".png") for x in xrange(26)]
+    data = [read_image(img_subdir + str(x) + ".png") for x in xrange(25)]
+
+    for i in xrange(30):
+        file = random.randrange(0, 62 * 30)
+        img = "./dataset_processed/" + str(file / 30) + "/" + str(file % 30) + ".png"
+        data.append(read_image(img))
+
     return np.asarray(data)
 
 def get_test_data(building):
     """
-    return the last 5 imgs in the numbered directory
+    return the last 5 imgs in the numbered directory and 5 of not the building
     """
     img_subdir = "./dataset_processed/" + str(building) + "/"
     data = [read_image(img_subdir + str(x) + ".png") for x in xrange(26, 31)]
+
+    for i in xrange(5):
+        file = random.randrange(0, 62 * 30)
+        img = "./dataset_processed/" + str(file / 30) + "/" + str(file % 30) + ".png"
+        data.append(read_image(img))
+
     return np.asarray(data)
+
+def get_test_labels(building):
+    return np.asarray([1 for _ in xrange(25)] + [0 for _ in xrange(30)])
+
+def get_train_labels(building):
+    return np.asarray([1 for _ in xrange(5)] + [0 for _ in xrange(5)])
 
 def cnn_model_fn(features, labels, mode):
     input_layer = tf.reshape(features, [-1, 600, 600, 1])
@@ -101,55 +120,81 @@ def cnn_model_fn(features, labels, mode):
     return model_fn_lib.ModelFnOps(
             mode=mode, predictions=predictions, loss=loss, train_op=train_op)
 
+build_building_classifier = lambda x: learn.Estimator(
+        model_fn=cnn_model_fn, model_dir="./models/" + str(x))
+
+tensors_to_log = {"probabilities": "softmax_tensor"}
+logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log,
+        every_n_iter=5)
+
+metrics = {
+    "accuracy":
+        learn.MetricSpec(
+            metric_fn=tf.metrics.accuracy, prediction_key="classes"),
+}
+
+def train(x):
+    classifier = build_building_classifier(x)
+    classifier.fit(
+        x=get_train_data(x),
+        y=get_train_labels(x),
+        batch_size=5,
+        steps=10,
+        monitors=[logging_hook])
+    results = classifier.evaluate(
+        x=get_test_data(x), y=get_test_labels(x), metrics=metrics)
+    print(results)
+
+train(0)
 
 # setup
 
-x = tf.placeholder(tf.float32, [None, 360000])
-y = tf.placeholder(tf.float32, [None, 2])
-
-W_conv1 = weight_var([5, 5, 1, 32])
-b_conv1 = bias_var([32])
-
-x_image = tf.reshape(x, [-1, 600, 600, 1])
-
-h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-h_pool1 = max_pool_2x2(h_conv1)
-
-W = tf.Variable(tf.zeros([360000, 10]))
-b = tf.Variable(tf.zeros([10]))
-
-W_conv2 = weight_var([5, 5, 32, 64])
-b_conv2 = bias_var([64])
-
-h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-h_pool2 = max_pool_2x2(h_conv2)
-
-W_fc1 = weight_var([7 * 7 * 64, 1024])
-b_fc1 = bias_var([1024])
-
-h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
-h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-
-W_fc2 = weight_var([1024, 10])
-b_fc2 = bias_var([10])
-
-y_hat = tf.nn.softmax(tf.matmul(h_fc1, W_fc2) + b_fc2)
-
-cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y_hat), reduction_indices = [1]))
-
-train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-
-correct_prediction = tf.equal(tf.argmax(y_hat, 1), tf.argmax(y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-init = tf.initialize_all_variables()
-sess = tf.Session()
-sess.run(init)
-
-photos_dir = "./dataset_processed/"
-
-for subdir in os.listdir(photos_dir):
-    for file in os.listdir(photos_dir + subdir):
+#x = tf.placeholder(tf.float32, [None, 360000])
+#y = tf.placeholder(tf.float32, [None, 2])
+#
+#W_conv1 = weight_var([5, 5, 1, 32])
+#b_conv1 = bias_var([32])
+#
+#x_image = tf.reshape(x, [-1, 600, 600, 1])
+#
+#h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+#h_pool1 = max_pool_2x2(h_conv1)
+#
+#W = tf.Variable(tf.zeros([360000, 10]))
+#b = tf.Variable(tf.zeros([10]))
+#
+#W_conv2 = weight_var([5, 5, 32, 64])
+#b_conv2 = bias_var([64])
+#
+#h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+#h_pool2 = max_pool_2x2(h_conv2)
+#
+#W_fc1 = weight_var([7 * 7 * 64, 1024])
+#b_fc1 = bias_var([1024])
+#
+#h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
+#h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+#
+#W_fc2 = weight_var([1024, 10])
+#b_fc2 = bias_var([10])
+#
+#y_hat = tf.nn.softmax(tf.matmul(h_fc1, W_fc2) + b_fc2)
+#
+#cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y_hat), reduction_indices = [1]))
+#
+#train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+#
+#correct_prediction = tf.equal(tf.argmax(y_hat, 1), tf.argmax(y, 1))
+#accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+#
+#init = tf.initialize_all_variables()
+#sess = tf.Session()
+#sess.run(init)
+#
+#photos_dir = "./dataset_processed/"
+#
+#for subdir in os.listdir(photos_dir):
+#    for file in os.listdir(photos_dir + subdir):
 
 #for i in xrange(total):
 #    batch = mnist.train.next_batch(per_batch)
