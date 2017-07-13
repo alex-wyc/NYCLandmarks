@@ -41,9 +41,12 @@ def get_train_data(building):
     data = [read_image(img_subdir + str(x) + ".png") for x in xrange(25)]
 
     for i in xrange(30):
-        file = random.randrange(0, 62 * 30)
-        img = "./dataset_processed/" + str(file / 30) + "/" + str(file % 30) + ".png"
-        data.append(read_image(img))
+        try:
+            file = random.randrange(0, 62 * 30)
+            img = "./dataset_processed/" + str(file / 30) + "/" + str(file % 30) + ".png"
+            data.append(read_image(img))
+        except:
+            i-=1
 
     return np.asarray(data)
 
