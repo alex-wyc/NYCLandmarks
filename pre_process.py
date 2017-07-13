@@ -19,8 +19,8 @@ import PIL
 from PIL import Image
 import os
 
-width = 600
-height = 600
+width = 50
+height = 50
 
 successes = 0
 failures = 0
