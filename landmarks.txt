@@ -1,32 +1,23 @@
 Empire State Building
-Central Park
 Statue of Liberty
 One World Trade Center
-Metropolitan Museum of Art
 Chrysler Building
 Rockefeller Center
-Grand Central Terminal
-New York Stock Exchange
+New York Stock Exchange Building
 Trinity Church
 Federal Hall
 Charging Bull
 Guggenheim Museum
-Times Square
 New York Botanical Garden
 Macy's and Herald Square
-Coney Island
 Yankee Stadium
-Union Square
 Flatiron Building
 Brooklyn Bridge
 Manhattan Bridge
-Roosevelt Island
 Intrepid Air and Sea Museum
 Lincoln Center
-MoMA
 St. Patrick's Cathedral
 New York Public Library
-Washington Square Park
 NYC City Hall
 Bloomberg Tower
 Harlem Courthouse
@@ -43,20 +34,15 @@ Cathedral Church of St. John the Divine
 met life building
 new york life building
 The Beresford
-Whitney Museum of Art
-Chelsey Market
 St. Paul's Chapel	
 St. George's Episcopal Church	
 St. Ann and the Holy Trinity Church	
-Plaza Hotel	
+Plaza Hotel
 Metropolitan Life Insurance Company Tower	
 McGraw Hill Building	
-Battery Park
 Daily News Building
-Cooper Union
 Central Synagogue
 Carnegie Hall
-Theodore Roosevelt Birthplace
 Hamilton Grange
 Castle Clinton
 Grant's Tomb

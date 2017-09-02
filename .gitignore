@@ -103,3 +103,5 @@ ENV/
 dataset/
 dataset_processed/
 .*~
+
+model/

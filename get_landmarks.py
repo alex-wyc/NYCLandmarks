@@ -24,7 +24,7 @@ from PIL import Image
 from StringIO import StringIO
 
 GOOGLE_IMG_URL="https://www.google.com/search?tbm=isch&q={query}"
-IMG_PER_LANDMARK=30 # to change
+IMG_PER_LANDMARK=300 # to change
 
 landmarks = open('landmarks.txt', 'r').read().split('\n')
 
@@ -90,6 +90,7 @@ for i in xrange(len(landmarks)):
         except KeyboardInterrupt:
             exit(1)
         except:
+            os.system("cp dataset/%d/%d.png dataset/%d/%d.png" % (i, j-1, i, j))
             failures += 1
 
 print "Done! Downloaded %d images, %d failures" % (successes, failures)
