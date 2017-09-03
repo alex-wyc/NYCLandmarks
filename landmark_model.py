@@ -21,25 +21,29 @@ def read_image(path):
             output[y * w + x] = pixels[x, y]
     return output
 
-def get_train_data(building):
-    """
-    return a tensor of 25 imgs of the building and 30 of not the building
-    """
-    img_subdir = "./dataset_processed/" + str(building) + "/"
-    data = [read_image(img_subdir + str(x) + ".png") for x in
-            xrange(int(BATCH_SIZE / 2))]
+class InputDataReader():
+    def __init__(self, building, batch_size=BATCH_SIZE):
+        self.batch_sz = batch_size
+        self.counter = 0
+        self.max = 100
+        self.img_subdir = "./dataset_processed/" + str(building) + "/"
+    
+    def get_next_train_batch(self):
+        data = []
+        label = []
 
-    for i in xrange(int(BATCH_SIZE / 2)):
-        file = random.randrange(0, 62 * 30)
-        while file // 30 == building:
-            file = random.randrange(0, 62 * 30)
-        img = "./dataset_processed/" + str(file // 30) + "/" + str(file % 30) + ".png"
-        try:
-            data.append(read_image(img))
-        except IOError:
-            data.append(read_image("./dataset_processed/48/0.png"))
+        for i in xrange(int(self.batch_sz / 2)):
+            data.append(read_image(self.img_subdir + str(self.counter) + '.png'))
+            label.append([1, 0])
+            self.counter = (self.counter + 1) % 100
 
-    return np.asarray(data)
+            other = random.randrange(48)
+            other2 = random.randrange(100)
+            data.append(read_image("./dataset_processed/%d/%d.png" % (other,
+                other2)))
+            label.append([0, 1])
+
+        return [np.asarray(data), np.asarray(label)]
 
 def get_test_data(building):
     """
@@ -48,9 +52,9 @@ def get_test_data(building):
     img_subdir = "./dataset_processed/" + str(building) + "/"
     data = [read_image(img_subdir + str(x) + ".png") for x in xrange(25)]
 
-    for i in xrange(330):
-        file = random.randrange(0, 62 * 30)
-        img = "./dataset_processed/" + str(file // 30) + "/" + str(file % 30) + ".png"
+    for i in xrange(30):
+        file = random.randrange(0, 48 * 100)
+        img = "./dataset_processed/" + str(file // 100) + "/" + str(file % 100) + ".png"
         try:
             data.append(read_image(img))
         except IOError:
@@ -61,12 +65,6 @@ def get_test_data(building):
 def get_test_labels(building):
     return np.asarray([[1, 0] for _ in xrange(25)] + [[0, 1] for _ in xrange(30)],
             dtype=np.int32)
-
-def get_train_labels(building):
-    return np.asarray([[1, 0] for _ in xrange(int(BATCH_SIZE / 2))] +
-            [[0, 1] for _ in xrange(int(BATCH_SIZE / 2))], dtype=np.int32)
-
-
 
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1,1,1,1], padding="SAME")
@@ -122,6 +120,8 @@ def deep_cnn(input):
     return y_conv, keep_prob
 
 def train(building):
+    input_getter = InputDataReader(building)
+
     x = tf.placeholder(tf.float32, [None, WIDTH * HEIGHT])
     y_ = tf.placeholder(tf.float32, [None, 2])
 
@@ -133,7 +133,7 @@ def train(building):
     cross_entropy = tf.reduce_mean(cross_entropy)
 
     with tf.name_scope('adam_optimizer'):
-        train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+        train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
 
     with tf.name_scope('accuracy'):
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
@@ -150,17 +150,16 @@ def train(building):
         sess.run(tf.global_variables_initializer())
 
         for i in range(200):
-            train_data = get_train_data(building)
-            train_labels = get_train_labels(building)
+            batch = input_getter.get_next_train_batch()
 
             if i % 10 == 0:
                 train_accuracy = accuracy.eval(feed_dict={
-                    x: train_data, y_: train_labels, keep_prob: 1.0
+                    x: batch[0], y_: batch[1], keep_prob: 1.0
                 })
                 print("step %d, training accuracy %g" % (i, train_accuracy))
 
             train_step.run(feed_dict = {
-                x: train_data, y_: train_labels, keep_prob: 0.5
+                x: batch[0], y_: batch[1], keep_prob: 0.5
             })
 
         test_data = get_test_data(building)
@@ -170,4 +169,6 @@ def train(building):
             x: test_data, y_:test_labels, keep_prob: 1.0
         }))
 
-train(0)
+if __name__ == "__main__":
+    for i in xrange(48):
+        train(i)
